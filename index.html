@@ -234,11 +234,14 @@ tbody tr{animation:rowIn .2s ease both}
          alt="logo">
     <h2>Admin Ban Manager</h2>
     <p>ระบบนี้สำหรับ Admin เท่านั้น<br>กรุณากรอก Password เพื่อเข้าใช้งาน</p>
-    <div style="display:flex; justify-content:center; align-items:center;">
-      <input type="password" id="lockInput" placeholder="Admin Password" style="width:100%; text-align:center;" onkeydown="if(event.key==='Enter')tryUnlock()">
+    <div style="position:relative;margin-bottom:4px">
+      <input type="password" id="lockInput" placeholder="Admin Password" style="width:100%;text-align:center" onkeydown="if(event.key==='Enter')tryUnlock()">
     </div>
     <div class="err" id="lockErr"></div>
-    <button class="btn btn-p" style="width:100%; display:flex; justify-content:center; align-items:center;" onclick="tryUnlock()">🔓 เข้าสู่ระบบ</button>
+    <button class="btn btn-p" style="width:100%;display:flex;justify-content:center;align-items:center;margin-top:4px" onclick="tryUnlock()">🔓 เข้าสู่ระบบ</button>
+    <div style="margin-top:18px;font-size:11px;color:var(--text-muted);border-top:1px solid var(--border);padding-top:14px">
+      Ban Manager v3.1 • WexZ
+    </div>
   </div>
 </div>
 
@@ -372,7 +375,9 @@ tbody tr{animation:rowIn .2s ease both}
     </div>
     <div class="row">
       <div><label>Universe ID</label><input id="universeId" placeholder="เช่น 9951170145"></div>
-      <div><label>API Key (Open Cloud)</label><input type="password" id="apiKey" placeholder="รับจาก create.roblox.com/credentials"></div>
+      <div><label>API Key (Open Cloud)</label>
+        <input type="password" id="apiKey" placeholder="รับจาก create.roblox.com/credentials">
+      </div>
     </div>
     <div class="row">
       <div><label>DataStore Name</label><input id="dsName" value="AdminBans_v1"></div>
@@ -428,6 +433,10 @@ function tryUnlock() {
     loadSettings();
     loadList();
     updateDiscordLink();
+    // ถ้ามี API Key บันทึกไว้แล้ว → ทดสอบ connection อัตโนมัติ
+    if (CFG.universeId && CFG.apiKey) {
+      setTimeout(() => testConn(), 500);
+    }
   } else {
     const err = document.getElementById('lockErr');
     err.textContent = '❌ Password ไม่ถูกต้อง กรุณาลองใหม่';
@@ -471,15 +480,16 @@ function updateDiscordLink() {
 //  SETTINGS
 // ════════════════════════════════════════════════════
 function saveSettings() {
-  CFG.universeId   = document.getElementById('universeId').value.trim();
-  CFG.apiKey       = document.getElementById('apiKey').value.trim();
-  CFG.dsName       = document.getElementById('dsName').value.trim() || 'AdminBans_v1';
-  CFG.webhookUrl   = document.getElementById('webhookUrl').value.trim();
-  CFG.discordInvite= document.getElementById('discordInvite').value.trim();
-  const pwd        = document.getElementById('adminPwd').value.trim();
+  CFG.universeId = document.getElementById('universeId').value.trim();
+  CFG.apiKey     = document.getElementById('apiKey').value.trim();
+  CFG.dsName     = document.getElementById('dsName').value.trim() || 'AdminBans_v1';
+  const pwd      = document.getElementById('adminPwd').value.trim();
   if (pwd) localStorage.setItem('adminPwd', pwd);
   if (!CFG.universeId || !CFG.apiKey) { toast('กรุณากรอก Universe ID และ API Key','err'); return; }
-  localStorage.setItem('bcfg', JSON.stringify({ universeId:CFG.universeId, dsName:CFG.dsName, webhookUrl:CFG.webhookUrl, discordInvite:CFG.discordInvite }));
+  // บันทึก Universe ID และ DataStore Name
+  localStorage.setItem('bcfg', JSON.stringify({ universeId:CFG.universeId, dsName:CFG.dsName }));
+  // บันทึก API Key แบบ base64 (ไม่โชว์ plain text)
+  try { localStorage.setItem('_ak', btoa(unescape(encodeURIComponent(CFG.apiKey)))); } catch(e){}
   toast('บันทึกแล้ว — กำลังทดสอบการเชื่อมต่อ...','info');
   updateDiscordLink();
   testConn();
@@ -488,10 +498,17 @@ function saveSettings() {
 function loadSettings() {
   try {
     const s = JSON.parse(localStorage.getItem('bcfg')||'{}');
-    if(s.universeId)   { document.getElementById('universeId').value=s.universeId;     CFG.universeId=s.universeId; }
-    if(s.dsName)       { document.getElementById('dsName').value=s.dsName;             CFG.dsName=s.dsName; }
-    if(s.webhookUrl)   { document.getElementById('webhookUrl').value=s.webhookUrl;     CFG.webhookUrl=s.webhookUrl; }
-    if(s.discordInvite){ document.getElementById('discordInvite').value=s.discordInvite; CFG.discordInvite=s.discordInvite; }
+    if(s.universeId) { document.getElementById('universeId').value=s.universeId; CFG.universeId=s.universeId; }
+    if(s.dsName)     { document.getElementById('dsName').value=s.dsName;         CFG.dsName=s.dsName; }
+    // โหลด API Key กลับมาจาก localStorage
+    const ak = localStorage.getItem('_ak');
+    if(ak) {
+      try {
+        const decoded = decodeURIComponent(escape(atob(ak)));
+        document.getElementById('apiKey').value = decoded;
+        CFG.apiKey = decoded;
+      } catch(e){}
+    }
   } catch(e){}
 }
 
@@ -799,6 +816,7 @@ async function sendFeedback() {
 // ════════════════════════════════════════════════════
 //  INIT
 // ════════════════════════════════════════════════════
+
 (async()=>{
   try { await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:'{"method":"PING"}'}); } catch(e){}
 })();
