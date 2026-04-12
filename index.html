@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin Ban Manager</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0a0f;--bg2:#111118;--bg3:#18181f;--bg4:#0d0d14;
+  --border:#2a2a38;--border2:#3a3a50;
+  --purple:#7c3aed;--purple-l:#a855f7;--purple-dim:#1e0a40;
+  --red:#dc2626;--red-l:#f87171;--red-dim:#3b0a0a;
+  --green:#16a34a;--green-l:#4ade80;--green-dim:#0a2e18;
+  --orange:#d97706;--orange-l:#fbbf24;--orange-dim:#2a1800;
+  --text:#e8e8f0;--text-dim:#888899;--text-muted:#555566;
+  --mono:'Space Mono',monospace;--sans:'Sora',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh}
+body::before{content:'';position:fixed;inset:0;z-index:0;
+  background-image:linear-gradient(rgba(124,58,237,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(124,58,237,.03) 1px,transparent 1px);
+  background-size:40px 40px;pointer-events:none}
+.wrap{position:relative;z-index:1;max-width:1000px;margin:0 auto;padding:32px 20px 80px}
+
+/* HEADER */
+header{display:flex;align-items:center;gap:14px;border-bottom:1px solid var(--border);padding-bottom:24px;margin-bottom:28px}
+.logo{width:46px;height:46px;border-radius:12px;background:linear-gradient(135deg,var(--purple-dim),var(--purple));display:grid;place-items:center;font-size:20px;flex-shrink:0;box-shadow:0 0 20px rgba(124,58,237,.3)}
+header h1{font-size:20px;font-weight:700}
+header p{font-size:12px;color:var(--text-dim);margin-top:2px}
+.badge{margin-left:auto;font-family:var(--mono);font-size:11px;padding:3px 9px;border-radius:20px;background:var(--purple-dim);color:var(--purple-l);border:1px solid var(--purple)}
+
+/* PANELS */
+.panel{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:22px;margin-bottom:16px}
+.panel-title{font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim);margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.panel-title::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* FORM */
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.row.full{grid-template-columns:1fr}
+.row.three{grid-template-columns:1fr 1fr 1fr}
+@media(max-width:640px){.row,.row.three{grid-template-columns:1fr}}
+label{display:block;font-size:11px;color:var(--text-dim);margin-bottom:5px;font-weight:600}
+input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:9px 12px;font-family:var(--mono);font-size:13px;color:var(--text);outline:none;transition:border-color .15s,box-shadow .15s}
+input:focus{border-color:var(--purple);box-shadow:0 0 0 3px rgba(124,58,237,.12)}
+input::placeholder{color:var(--text-muted)}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border-radius:7px;border:none;cursor:pointer;font-family:var(--sans);font-size:13px;font-weight:600;transition:all .15s;white-space:nowrap}
+.btn-p{background:var(--purple);color:#fff}.btn-p:hover{background:var(--purple-l);box-shadow:0 0 16px rgba(168,85,247,.35)}
+.btn-d{background:var(--red-dim);color:var(--red-l);border:1px solid rgba(220,38,38,.4)}.btn-d:hover{background:var(--red);color:#fff}
+.btn-s{background:var(--green-dim);color:var(--green-l);border:1px solid rgba(22,163,74,.4)}.btn-s:hover{background:var(--green);color:#fff}
+.btn-g{background:transparent;color:var(--text-dim);border:1px solid var(--border)}.btn-g:hover{border-color:var(--border2);color:var(--text)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn-sm{padding:5px 12px;font-size:12px;border-radius:6px}
+
+/* TABS */
+.tabs{display:flex;gap:2px;margin-bottom:16px;background:var(--bg2);border-radius:10px;padding:4px;border:1px solid var(--border)}
+.tab{flex:1;text-align:center;padding:8px 4px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;color:var(--text-dim)}
+.tab.active{background:var(--purple);color:#fff}
+.tab:not(.active):hover{background:var(--bg3);color:var(--text)}
+.tc{display:none}.tc.active{display:block}
+
+/* TABLE */
+.tbl-wrap{overflow-x:auto;border-radius:10px;border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse}
+thead tr{background:var(--bg3)}
+th{text-align:left;padding:11px 14px;font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--border)}
+td{padding:12px 14px;font-size:13px;border-bottom:1px solid var(--border);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tbody tr:hover{background:rgba(255,255,255,.02)}
+.mono{font-family:var(--mono);font-size:12px;color:var(--purple-l)}
+.gold{color:var(--orange-l);font-size:12px}
+.dim{color:var(--text-dim);font-size:12px}
+.muted{color:var(--text-muted);font-size:12px;font-family:var(--mono);white-space:nowrap}
+
+/* TOAST */
+#toast{position:fixed;bottom:24px;right:24px;z-index:9999;min-width:260px;border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:10px;font-size:13px;font-weight:600;transform:translateY(80px);opacity:0;transition:all .3s cubic-bezier(.34,1.56,.64,1);pointer-events:none}
+#toast.show{transform:translateY(0);opacity:1}
+#toast.ok{background:var(--green-dim);border:1px solid var(--green);color:var(--green-l)}
+#toast.err{background:var(--red-dim);border:1px solid var(--red);color:var(--red-l)}
+#toast.warn{background:var(--orange-dim);border:1px solid var(--orange);color:var(--orange-l)}
+
+/* MISC */
+.empty{text-align:center;padding:50px 20px;color:var(--text-muted);font-size:13px}
+.ico{font-size:36px;margin-bottom:10px}
+.spin{width:16px;height:16px;border-radius:50%;border:2px solid rgba(255,255,255,.2);border-top-color:#fff;animation:sp .6s linear infinite;display:inline-block}
+@keyframes sp{to{transform:rotate(360deg)}}
+.sep{height:1px;background:var(--border);margin:12px 0 16px}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.dg{background:var(--green-l);box-shadow:0 0 6px var(--green)}
+.dr{background:var(--red-l)}
+.dy{background:var(--orange-l)}
+.dgray{background:var(--text-muted)}
+.info{background:rgba(124,58,237,.07);border:1px solid rgba(124,58,237,.2);border-radius:9px;padding:14px 16px;font-size:13px;color:var(--text-dim);line-height:1.8}
+.info.green{background:rgba(22,163,74,.07);border-color:rgba(22,163,74,.2)}
+.info.orange{background:rgba(217,119,6,.08);border-color:rgba(217,119,6,.3)}
+.info strong{color:var(--text)}
+.info code{font-family:var(--mono);font-size:11px;background:rgba(124,58,237,.15);padding:1px 5px;border-radius:4px;color:var(--purple-l)}
+.info a{color:var(--purple-l)}
+.steps{display:flex;flex-direction:column;gap:12px;margin-top:10px}
+.step{display:flex;gap:12px;align-items:flex-start}
+.sn{width:26px;height:26px;border-radius:50%;background:var(--purple-dim);border:1px solid var(--purple);color:var(--purple-l);font-size:12px;font-weight:700;display:grid;place-items:center;flex-shrink:0}
+.sb{flex:1;font-size:13px;color:var(--text-dim);line-height:1.7}
+.sb strong{color:var(--text)}
+.sb code{font-family:var(--mono);font-size:11px;background:rgba(255,255,255,.06);padding:1px 5px;border-radius:4px;color:var(--orange-l)}
+@keyframes rowIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+tbody tr{animation:rowIn .18s ease both}
+
+/* API KEY DISPLAY */
+#apiKeyDisplay{word-break:break-all;font-family:var(--mono);font-size:11px;color:var(--text-dim)}
+
+/* STATUS BADGE */
+.status-badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:5px 12px;border-radius:7px;background:var(--bg3);border:1px solid var(--border)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- HEADER -->
+<header>
+  <div class="logo">🛡️</div>
+  <div>
+    <h1>Admin Ban Manager</h1>
+    <p>Roblox DataStore • Netlify Functions</p>
+  </div>
+  <span class="badge">Netlify Edition</span>
+</header>
+
+<!-- TABS -->
+<div class="tabs">
+  <div class="tab active" onclick="goTab('setup')">⚙️ ตั้งค่า</div>
+  <div class="tab" onclick="goTab('list')">📋 รายการ Ban</div>
+  <div class="tab" onclick="goTab('ban')">🔨 Ban</div>
+  <div class="tab" onclick="goTab('unban')">✅ Unban</div>
+  <div class="tab" onclick="goTab('guide')">📖 วิธีใช้</div>
+</div>
+
+<!-- ═══ SETUP ═══ -->
+<div class="tc active" id="tc-setup">
+  <div class="panel">
+    <div class="panel-title">🔑 ตั้งค่า API</div>
+
+    <!-- STATUS ROW -->
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap">
+      <span class="status-badge" id="netlifyStatus"><span class="dot dgray"></span> กำลังตรวจสอบ...</span>
+      <span style="font-size:12px;color:var(--text-muted)">เชื่อมต่อผ่าน Netlify Functions อัตโนมัติ — ไม่ต้องตั้งค่าอะไรพิเศษ</span>
+    </div>
+
+    <div class="row">
+      <div>
+        <label>Universe ID</label>
+        <input id="universeId" placeholder="เช่น 9951170145">
+      </div>
+      <div>
+        <label>API Key (Open Cloud)</label>
+        <input type="password" id="apiKey" placeholder="รับจาก create.roblox.com/credentials">
+      </div>
+    </div>
+    <div class="row">
+      <div>
+        <label>DataStore Name</label>
+        <input id="dsName" value="AdminBans_v1">
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:4px">
+      <button class="btn btn-p" onclick="saveAndTest()">💾 บันทึก & ทดสอบ</button>
+      <button class="btn btn-g btn-sm" onclick="clearSettings()">🗑️ ล้างค่า</button>
+    </div>
+  </div>
+
+  <div class="info green">
+    <strong>✅ เว็บนี้กดปุ่มได้เลย!</strong> — ใช้ Netlify Functions เป็น proxy กลาง เบราว์เซอร์ไม่โดน CORS แล้ว<br>
+    ไม่ต้องรัน <code>node proxy.js</code> ไม่ต้องติดตั้งอะไรเพิ่ม — ทำงานได้ทุก OS ทุกเบราว์เซอร์
+  </div>
+
+  <div class="info" style="margin-top:12px">
+    <strong>วิธีรับ API Key:</strong>
+    ไปที่ <a href="https://create.roblox.com/credentials" target="_blank">create.roblox.com/credentials</a>
+    → Create API Key → permission <code>DataStore</code> → เลือก Universe → <code>Read</code> + <code>Write</code><br>
+    <strong>Universe ID:</strong> ดูใน URL เกม <code>create.roblox.com/games/<strong>ตัวเลข</strong>/...</code>
+  </div>
+</div>
+
+<!-- ═══ LIST ═══ -->
+<div class="tc" id="tc-list">
+  <div class="panel" style="padding-bottom:0">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+      <div class="panel-title" style="margin:0">รายชื่อผู้เล่นที่ถูก Ban</div>
+      <button class="btn btn-g btn-sm" onclick="loadList()">🔄 รีเฟรช</button>
+    </div>
+    <div id="listWrap"><div class="empty"><div class="ico">🔍</div>กดรีเฟรชเพื่อโหลด</div></div>
+  </div>
+</div>
+
+<!-- ═══ BAN ═══ -->
+<div class="tc" id="tc-ban">
+  <div class="panel">
+    <div class="panel-title">🔨 Ban ผู้เล่น</div>
+    <div class="row three">
+      <div><label>UserId (ตัวเลข)</label><input id="banUid" placeholder="เช่น 12345678"></div>
+      <div><label>ชื่อผู้เล่น (สำหรับ record)</label><input id="banName" placeholder="PlayerName"></div>
+      <div><label>เหตุผล</label><input id="banReason" placeholder="ระบุเหตุผล..."></div>
+    </div>
+    <div style="margin-top:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <button class="btn btn-d" id="btnBan" onclick="doBan()">🔨 Ban</button>
+      <span style="font-size:12px;color:var(--text-muted)">Ban คนออฟไลน์ได้ด้วย UserId</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ UNBAN ═══ -->
+<div class="tc" id="tc-unban">
+  <div class="panel">
+    <div class="panel-title">✅ Unban ผู้เล่น</div>
+    <div class="row">
+      <div><label>UserId (ตัวเลข)</label><input id="unbanUid" placeholder="เช่น 12345678"></div>
+    </div>
+    <div style="margin-top:8px">
+      <button class="btn btn-s" id="btnUnban" onclick="doUnban()">✅ Unban</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ GUIDE ═══ -->
+<div class="tc" id="tc-guide">
+  <div class="panel">
+    <div class="panel-title">📖 วิธีใช้งาน</div>
+    <div class="steps">
+      <div class="step"><div class="sn">1</div><div class="sb"><strong>ตั้งค่า API</strong> → ไปแท็บ ตั้งค่า → กรอก Universe ID และ API Key → กด บันทึก</div></div>
+      <div class="step"><div class="sn">2</div><div class="sb"><strong>ดู Ban List</strong> → ไปแท็บ รายการ Ban → กด รีเฟรช → เห็นรายชื่อทั้งหมด</div></div>
+      <div class="step"><div class="sn">3</div><div class="sb"><strong>Ban ผู้เล่น</strong> → ไปแท็บ Ban → กรอก UserId + ชื่อ + เหตุผล → กด Ban<br>ban คนออฟไลน์ได้เลย ไม่ต้องให้เขาออนไลน์</div></div>
+      <div class="step"><div class="sn">4</div><div class="sb"><strong>Unban ผู้เล่น</strong> → ไปแท็บ Unban → กรอก UserId → กด Unban<br>หรือกดปุ่ม ✅ Unban ในรายการ Ban โดยตรง</div></div>
+    </div>
+    <div class="sep"></div>
+    <div class="info orange" style="margin-top:0">
+      <strong>🎮 วิธีใช้ใน Roblox (In-game):</strong><br>
+      กด <code>M</code> เพื่อเปิด Admin Panel → กดปุ่ม Ban → เลือก player หรือพิมพ์ UserId ใน Unban box (สีทอง) → กด Unban
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">🏗️ วิธี Deploy เว็บนี้</div>
+    <div class="steps">
+      <div class="step"><div class="sn">1</div><div class="sb">สร้าง <strong>GitHub repo</strong> ใหม่ → อัปโหลดไฟล์ทั้งหมด (index.html, netlify.toml, netlify/functions/ds.js)</div></div>
+      <div class="step"><div class="sn">2</div><div class="sb">ไปที่ <a href="https://netlify.com" target="_blank" style="color:var(--purple-l)">netlify.com</a> → Add new site → Import from GitHub → เลือก repo</div></div>
+      <div class="step"><div class="sn">3</div><div class="sb">Netlify จะ deploy อัตโนมัติ ใช้เวลา ~1 นาที → ได้ URL เช่น <code>yourname.netlify.app</code></div></div>
+      <div class="step"><div class="sn">4</div><div class="sb">เปิด URL → กรอก API Key → ใช้งานได้เลย ✅ ไม่ต้องรัน proxy ใดๆ</div></div>
+    </div>
+  </div>
+</div>
+
+</div><!-- wrap -->
+<div id="toast"><span id="tIco"></span><span id="tMsg"></span></div>
+
+<script>
+// ── CONFIG ───────────────────────────────────────────────
+let CFG = { universeId:'', apiKey:'', dsName:'AdminBans_v1' };
+
+// Netlify Function endpoint — เรียก relative path เสมอ
+const API_ENDPOINT = '/.netlify/functions/ds';
+
+// ── TOAST ────────────────────────────────────────────────
+let toastT;
+function toast(msg, type='ok') {
+  const el=document.getElementById('toast');
+  document.getElementById('tIco').textContent = type==='ok'?'✓':type==='warn'?'⚠':'✕';
+  document.getElementById('tMsg').textContent = msg;
+  el.className='show '+type;
+  clearTimeout(toastT); toastT=setTimeout(()=>el.className='',4000);
+}
+
+// ── TABS ─────────────────────────────────────────────────
+function goTab(name) {
+  document.querySelectorAll('.tab').forEach((t,i)=>{
+    const ns=['setup','list','ban','unban','guide'];
+    t.classList.toggle('active',ns[i]===name);
+  });
+  document.querySelectorAll('.tc').forEach(c=>c.classList.toggle('active',c.id==='tc-'+name));
+}
+
+// ── SETTINGS ─────────────────────────────────────────────
+function saveAndTest() {
+  CFG.universeId = document.getElementById('universeId').value.trim();
+  CFG.apiKey     = document.getElementById('apiKey').value.trim();
+  CFG.dsName     = document.getElementById('dsName').value.trim() || 'AdminBans_v1';
+  if (!CFG.universeId || !CFG.apiKey) { toast('กรุณากรอก Universe ID และ API Key','err'); return; }
+  // save (ไม่เก็บ apiKey ใน localStorage เพื่อความปลอดภัย — ต้องกรอกใหม่ทุกครั้ง)
+  localStorage.setItem('bcfg', JSON.stringify({ universeId:CFG.universeId, dsName:CFG.dsName }));
+  toast('บันทึกแล้ว — กำลังทดสอบ...','warn');
+  testConnection();
+}
+
+function clearSettings() {
+  localStorage.removeItem('bcfg');
+  CFG = { universeId:'', apiKey:'', dsName:'AdminBans_v1' };
+  ['universeId','apiKey','dsName'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(id==='dsName') el.value='AdminBans_v1'; else el.value='';
+  });
+  setNetlifyStatus('not-set');
+  toast('ล้างค่าแล้ว','warn');
+}
+
+function loadSettings() {
+  try {
+    const s=JSON.parse(localStorage.getItem('bcfg')||'{}');
+    if(s.universeId){document.getElementById('universeId').value=s.universeId;CFG.universeId=s.universeId;}
+    if(s.dsName){document.getElementById('dsName').value=s.dsName;CFG.dsName=s.dsName;}
+  } catch(e){}
+}
+
+// ── NETLIFY STATUS ───────────────────────────────────────
+function setNetlifyStatus(s){
+  const el=document.getElementById('netlifyStatus');
+  const m={
+    ok:      ['dg',   'Netlify Function ทำงาน ✓'],
+    err:     ['dr',   'Function Error — ลองใหม่'],
+    loading: ['dy',   'กำลังทดสอบ...'],
+    'not-set':['dgray','ยังไม่ได้ตั้งค่า'],
+  };
+  const [d,t]=m[s]||['dgray','ไม่ทราบ'];
+  el.innerHTML=`<span class="dot ${d}"></span> ${t}`;
+}
+
+async function testConnection(){
+  setNetlifyStatus('loading');
+  // ทดสอบโดย list ban พร้อมกัน
+  try {
+    const r=await callDS('LIST');
+    setNetlifyStatus('ok');
+    toast('เชื่อมต่อสำเร็จ ✓','ok');
+  } catch(e){
+    setNetlifyStatus('err');
+    toast('เชื่อมต่อไม่ได้: '+e.message,'err');
+  }
+}
+
+// ── CALL NETLIFY FUNCTION ────────────────────────────────
+async function callDS(method, entryKey, body) {
+  if (!CFG.universeId || !CFG.apiKey) throw new Error('กรุณาตั้งค่า Universe ID และ API Key ก่อน');
+  const r = await fetch(API_ENDPOINT, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ method, universeId:CFG.universeId, apiKey:CFG.apiKey, dsName:CFG.dsName, entryKey, body })
+  });
+  const text = await r.text();
+  if (!r.ok) throw new Error('HTTP '+r.status+': '+text.slice(0,80));
+  try { return JSON.parse(text); } catch { return {}; }
+}
+
+// ── LIST ─────────────────────────────────────────────────
+async function loadList(){
+  const wrap=document.getElementById('listWrap');
+  wrap.innerHTML='<div class="empty"><div class="spin"></div><br><br>กำลังโหลด...</div>';
+  try{
+    const ld=await callDS('LIST');
+    const keys=(ld?.keys||[]).map(k=>k.key);
+    if(!keys.length){wrap.innerHTML='<div class="empty"><div class="ico">✅</div>ไม่มีผู้เล่นที่ถูก Ban</div>';return;}
+    const entries=await Promise.all(keys.map(async k=>{
+      try{return{uid:k.replace('ban_',''),data:await callDS('GET',k)};}
+      catch{return{uid:k.replace('ban_',''),data:{}};}
+    }));
+    const rows=entries.map((e,i)=>{
+      const d=e.data||{};
+      const dt=d.time?new Date(d.time*1000).toLocaleString('th-TH'):'-';
+      const nm=(d.name||e.uid).replace(/'/g,"\\'");
+      return `<tr style="animation-delay:${i*.03}s">
+        <td class="mono">${e.uid}</td>
+        <td style="font-weight:600">${d.name||'-'}</td>
+        <td class="dim" style="max-width:160px">${d.reason||'-'}</td>
+        <td class="gold">${d.bannedBy||'-'}</td>
+        <td class="muted">${dt}</td>
+        <td><button class="btn btn-s btn-sm" onclick="quickUnban('${e.uid}','${nm}')">✅ Unban</button></td>
+      </tr>`;
+    }).join('');
+    wrap.innerHTML=`<div class="tbl-wrap"><table><thead><tr><th>UserId</th><th>ชื่อผู้เล่น</th><th>เหตุผล</th><th>Ban โดย</th><th>วันที่</th><th></th></tr></thead><tbody>${rows}</tbody></table></div><div style="padding:10px 14px;font-size:12px;color:var(--text-muted)">${entries.length} รายการ</div>`;
+  }catch(e){
+    const isConfig = e.message.includes('ตั้งค่า');
+    wrap.innerHTML=`<div class="empty"><div class="ico">${isConfig?'⚙️':'⚠️'}</div>${e.message}<br><br><button class="btn btn-p btn-sm" onclick="goTab('setup')">${isConfig?'ไปตั้งค่า':'ลองอีกครั้ง'}</button></div>`;
+    if(!isConfig) toast(e.message,'err');
+  }
+}
+
+// ── BAN ──────────────────────────────────────────────────
+async function doBan(){
+  const uid   =document.getElementById('banUid').value.trim().replace(/\D/g,'');
+  const name  =document.getElementById('banName').value.trim();
+  const reason=document.getElementById('banReason').value.trim();
+  if(!uid){toast('กรุณาระบุ UserId','err');return;}
+  const btn=document.getElementById('btnBan');
+  btn.disabled=true;btn.innerHTML='<span class="spin"></span> กำลัง Ban...';
+  try{
+    await callDS('POST','ban_'+uid,{
+      reason:reason||'No reason given',
+      name:name||uid,
+      bannedBy:'WebPanel',
+      time:Math.floor(Date.now()/1000)
+    });
+    toast('Ban สำเร็จ: '+(name||uid),'ok');
+    ['banUid','banName','banReason'].forEach(id=>document.getElementById(id).value='');
+  }catch(e){toast(e.message,'err');}
+  finally{btn.disabled=false;btn.innerHTML='🔨 Ban';}
+}
+
+// ── UNBAN ────────────────────────────────────────────────
+async function doUnban(){
+  const uid=document.getElementById('unbanUid').value.trim().replace(/\D/g,'');
+  if(!uid){toast('กรุณาระบุ UserId','err');return;}
+  await performUnban(uid);
+}
+async function quickUnban(uid,name){
+  if(!confirm('Unban '+name+' ('+uid+')?'))return;
+  await performUnban(uid,true);
+}
+async function performUnban(uid,refresh=false){
+  const btn=document.getElementById('btnUnban');
+  if(btn){btn.disabled=true;btn.innerHTML='<span class="spin"></span>';}
+  try{
+    await callDS('DELETE','ban_'+uid);
+    toast('Unban สำเร็จ: '+uid,'ok');
+    if(document.getElementById('unbanUid'))document.getElementById('unbanUid').value='';
+    if(refresh)setTimeout(loadList,800);
+  }catch(e){toast(e.message,'err');}
+  finally{if(btn){btn.disabled=false;btn.innerHTML='✅ Unban';}}
+}
+
+// ── INIT ─────────────────────────────────────────────────
+loadSettings();
+
+// ตรวจสอบว่า Netlify Function ใช้งานได้ไหม
+(async()=>{
+  try{
+    const r=await fetch(API_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'PING'})});
+    // function ตอบกลับ = ทำงานอยู่
+    setNetlifyStatus(r.status===400?'ok':'ok'); // 400 = function รัน แต่ params ผิด = function ok
+  }catch(e){
+    setNetlifyStatus('err');
+  }
+})();
+</script>
+</body>
+</html>
