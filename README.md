@@ -1,0 +1,1 @@
+# WexZ-ban-manager
