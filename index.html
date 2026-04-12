@@ -1,442 +1,786 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Admin Ban Manager</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ban Manager</title>
+<!-- ★ FAVICON — เปลี่ยน URL เป็นรูปของตัวเอง -->
+<link rel="icon" type="image/png" href="https://cdn.discordapp.com/attachments/1211672074662449252/1492797835773739008/d820b4c5e5e29db0.png?ex=69dca3d2&is=69db5252&hm=3d5072ae5e707b7b1dac7699776b807b8216f4e8313d5fb034f4fa74308babfb&">
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet">
 <style>
+/* ════════════════════ VARIABLES ════════════════════ */
 :root{
-  --bg:#0a0a0f;--bg2:#111118;--bg3:#18181f;--bg4:#0d0d14;
-  --border:#2a2a38;--border2:#3a3a50;
-  --purple:#7c3aed;--purple-l:#a855f7;--purple-dim:#1e0a40;
-  --red:#dc2626;--red-l:#f87171;--red-dim:#3b0a0a;
-  --green:#16a34a;--green-l:#4ade80;--green-dim:#0a2e18;
-  --orange:#d97706;--orange-l:#fbbf24;--orange-dim:#2a1800;
-  --text:#e8e8f0;--text-dim:#888899;--text-muted:#555566;
+  --bg:#07070d;--bg2:#0f0f18;--bg3:#16161f;--bg4:#1c1c28;
+  --border:#252535;--border2:#353550;
+  --purple:#6d28d9;--purple-l:#8b5cf6;--purple-ll:#c4b5fd;--purple-dim:#1a0d3b;
+  --red:#dc2626;--red-l:#f87171;--red-dim:#2d0a0a;
+  --green:#15803d;--green-l:#4ade80;--green-dim:#052010;
+  --orange:#b45309;--orange-l:#fbbf24;--orange-dim:#1c1000;
+  --discord:#5865f2;--discord-l:#7289da;
+  --text:#eeeef5;--text-dim:#7777aa;--text-muted:#44445a;
   --mono:'Space Mono',monospace;--sans:'Sora',sans-serif;
+  --radius:12px;--radius-sm:8px;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh}
-body::before{content:'';position:fixed;inset:0;z-index:0;
-  background-image:linear-gradient(rgba(124,58,237,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(124,58,237,.03) 1px,transparent 1px);
-  background-size:40px 40px;pointer-events:none}
-.wrap{position:relative;z-index:1;max-width:1000px;margin:0 auto;padding:32px 20px 80px}
+html{scroll-behavior:smooth}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
 
-/* HEADER */
-header{display:flex;align-items:center;gap:14px;border-bottom:1px solid var(--border);padding-bottom:24px;margin-bottom:28px}
-.logo{width:46px;height:46px;border-radius:12px;background:linear-gradient(135deg,var(--purple-dim),var(--purple));display:grid;place-items:center;font-size:20px;flex-shrink:0;box-shadow:0 0 20px rgba(124,58,237,.3)}
-header h1{font-size:20px;font-weight:700}
-header p{font-size:12px;color:var(--text-dim);margin-top:2px}
-.badge{margin-left:auto;font-family:var(--mono);font-size:11px;padding:3px 9px;border-radius:20px;background:var(--purple-dim);color:var(--purple-l);border:1px solid var(--purple)}
+/* GRID BG */
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(ellipse 80% 50% at 50% -20%,rgba(109,40,217,.15),transparent),
+  linear-gradient(rgba(109,40,217,.025) 1px,transparent 1px),
+  linear-gradient(90deg,rgba(109,40,217,.025) 1px,transparent 1px);
+  background-size:auto,48px 48px,48px 48px}
 
-/* PANELS */
-.panel{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:22px;margin-bottom:16px}
-.panel-title{font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim);margin-bottom:16px;display:flex;align-items:center;gap:8px}
-.panel-title::after{content:'';flex:1;height:1px;background:var(--border)}
+.wrap{position:relative;z-index:1;max-width:1060px;margin:0 auto;padding:0 20px 80px}
 
-/* FORM */
-.row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
-.row.full{grid-template-columns:1fr}
-.row.three{grid-template-columns:1fr 1fr 1fr}
-@media(max-width:640px){.row,.row.three{grid-template-columns:1fr}}
-label{display:block;font-size:11px;color:var(--text-dim);margin-bottom:5px;font-weight:600}
-input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:9px 12px;font-family:var(--mono);font-size:13px;color:var(--text);outline:none;transition:border-color .15s,box-shadow .15s}
-input:focus{border-color:var(--purple);box-shadow:0 0 0 3px rgba(124,58,237,.12)}
-input::placeholder{color:var(--text-muted)}
+/* ════════════════════ HEADER ════════════════════ */
+header{
+  display:flex;align-items:center;gap:16px;
+  padding:24px 0 22px;
+  border-bottom:1px solid var(--border);
+  margin-bottom:28px;
+}
+.logo-img{
+  width:48px;height:48px;border-radius:14px;
+  object-fit:cover;flex-shrink:0;
+  box-shadow:0 0 24px rgba(109,40,217,.4);
+  border:1px solid rgba(109,40,217,.4);
+  /* placeholder gradient ถ้ารูปโหลดไม่ได้ */
+  background:linear-gradient(135deg,var(--purple-dim),var(--purple));
+}
+.logo-img[src=""],
+.logo-img:not([src]){
+  background:linear-gradient(135deg,var(--purple-dim),var(--purple));
+}
+header h1{font-size:21px;font-weight:700;letter-spacing:-.5px}
+header p{font-size:12px;color:var(--text-dim);margin-top:3px}
+.header-right{margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.badge{font-family:var(--mono);font-size:10px;padding:3px 9px;border-radius:20px;background:var(--purple-dim);color:var(--purple-ll);border:1px solid rgba(109,40,217,.5)}
 
-/* BUTTONS */
-.btn{display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border-radius:7px;border:none;cursor:pointer;font-family:var(--sans);font-size:13px;font-weight:600;transition:all .15s;white-space:nowrap}
-.btn-p{background:var(--purple);color:#fff}.btn-p:hover{background:var(--purple-l);box-shadow:0 0 16px rgba(168,85,247,.35)}
-.btn-d{background:var(--red-dim);color:var(--red-l);border:1px solid rgba(220,38,38,.4)}.btn-d:hover{background:var(--red);color:#fff}
-.btn-s{background:var(--green-dim);color:var(--green-l);border:1px solid rgba(22,163,74,.4)}.btn-s:hover{background:var(--green);color:#fff}
-.btn-g{background:transparent;color:var(--text-dim);border:1px solid var(--border)}.btn-g:hover{border-color:var(--border2);color:var(--text)}
-.btn:disabled{opacity:.4;cursor:not-allowed}
-.btn-sm{padding:5px 12px;font-size:12px;border-radius:6px}
+/* Discord Join Button */
+.btn-discord-join{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:7px 14px;border-radius:8px;border:none;cursor:pointer;
+  background:var(--discord);color:#fff;
+  font-family:var(--sans);font-size:12px;font-weight:700;
+  transition:all .15s;text-decoration:none;
+  box-shadow:0 2px 12px rgba(88,101,242,.3);
+}
+.btn-discord-join:hover{background:var(--discord-l);transform:translateY(-1px);box-shadow:0 4px 20px rgba(88,101,242,.5)}
+.btn-discord-join svg{width:16px;height:16px;fill:#fff}
 
-/* TABS */
-.tabs{display:flex;gap:2px;margin-bottom:16px;background:var(--bg2);border-radius:10px;padding:4px;border:1px solid var(--border)}
-.tab{flex:1;text-align:center;padding:8px 4px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;color:var(--text-dim)}
-.tab.active{background:var(--purple);color:#fff}
+/* ════════════════════ ADMIN LOCK ════════════════════ */
+/* ป้องกันคนทั่วไปเห็น settings — ต้องกรอก admin password */
+#adminLock{
+  position:fixed;inset:0;z-index:9999;
+  background:var(--bg);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;
+  padding:20px;
+}
+#adminLock .lock-box{
+  background:var(--bg2);border:1px solid var(--border);border-radius:18px;
+  padding:36px 32px;max-width:380px;width:100%;text-align:center;
+}
+#adminLock .lock-logo{width:64px;height:64px;border-radius:16px;margin:0 auto 18px;display:block;object-fit:cover;background:linear-gradient(135deg,var(--purple-dim),var(--purple))}
+#adminLock h2{font-size:18px;font-weight:700;margin-bottom:6px}
+#adminLock p{font-size:13px;color:var(--text-dim);margin-bottom:20px;line-height:1.6}
+#adminLock input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-family:var(--mono);font-size:14px;color:var(--text);outline:none;text-align:center;margin-bottom:10px;transition:border-color .15s}
+#adminLock input:focus{border-color:var(--purple)}
+#adminLock .err{font-size:12px;color:var(--red-l);margin-bottom:8px;min-height:18px}
+
+/* ════════════════════ TABS ════════════════════ */
+.tabs{
+  display:flex;gap:2px;margin-bottom:20px;
+  background:var(--bg2);border-radius:12px;padding:4px;
+  border:1px solid var(--border);
+}
+.tab{
+  flex:1;text-align:center;padding:9px 4px;border-radius:9px;
+  font-size:12px;font-weight:600;cursor:pointer;
+  transition:all .15s;color:var(--text-dim);
+  user-select:none;
+}
+.tab.active{background:var(--purple);color:#fff;box-shadow:0 2px 12px rgba(109,40,217,.4)}
 .tab:not(.active):hover{background:var(--bg3);color:var(--text)}
 .tc{display:none}.tc.active{display:block}
 
-/* TABLE */
+/* ════════════════════ PANELS ════════════════════ */
+.panel{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:22px;margin-bottom:16px}
+.panel-title{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:18px;display:flex;align-items:center;gap:10px}
+.panel-title::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* ════════════════════ FORM ════════════════════ */
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.row.full{grid-template-columns:1fr}
+.row.three{grid-template-columns:1fr 1fr 1fr}
+@media(max-width:640px){.row,.row.three{grid-template-columns:1fr}}
+label{display:block;font-size:11px;color:var(--text-dim);margin-bottom:5px;font-weight:700;letter-spacing:.3px}
+input,textarea{
+  width:100%;background:var(--bg3);border:1px solid var(--border);
+  border-radius:var(--radius-sm);padding:10px 14px;
+  font-family:var(--mono);font-size:13px;color:var(--text);
+  outline:none;transition:border-color .15s,box-shadow .15s;
+}
+input:focus,textarea:focus{border-color:var(--purple);box-shadow:0 0 0 3px rgba(109,40,217,.12)}
+input::placeholder,textarea::placeholder{color:var(--text-muted)}
+textarea{resize:vertical;font-family:var(--sans);font-size:13px;min-height:80px}
+
+/* ════════════════════ BUTTONS ════════════════════ */
+.btn{display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border-radius:var(--radius-sm);border:none;cursor:pointer;font-family:var(--sans);font-size:13px;font-weight:600;transition:all .15s;white-space:nowrap;user-select:none}
+.btn-p{background:var(--purple);color:#fff}.btn-p:hover{background:var(--purple-l);box-shadow:0 0 16px rgba(109,40,217,.4)}
+.btn-d{background:var(--red-dim);color:var(--red-l);border:1px solid rgba(220,38,38,.3)}.btn-d:hover{background:var(--red);color:#fff}
+.btn-s{background:var(--green-dim);color:var(--green-l);border:1px solid rgba(21,128,61,.3)}.btn-s:hover{background:var(--green);color:#fff}
+.btn-g{background:transparent;color:var(--text-dim);border:1px solid var(--border)}.btn-g:hover{border-color:var(--border2);color:var(--text)}
+.btn-discord{background:var(--discord);color:#fff}.btn-discord:hover{background:var(--discord-l)}
+.btn-o{background:var(--orange-dim);color:var(--orange-l);border:1px solid rgba(180,83,9,.3)}.btn-o:hover{background:var(--orange);color:#fff}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+.btn-sm{padding:5px 12px;font-size:12px;border-radius:6px}
+.btn-xs{padding:3px 9px;font-size:11px;border-radius:5px}
+
+/* ════════════════════ TABLE ════════════════════ */
 .tbl-wrap{overflow-x:auto;border-radius:10px;border:1px solid var(--border)}
 table{width:100%;border-collapse:collapse}
 thead tr{background:var(--bg3)}
-th{text-align:left;padding:11px 14px;font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--border)}
+th{text-align:left;padding:11px 14px;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--border)}
 td{padding:12px 14px;font-size:13px;border-bottom:1px solid var(--border);vertical-align:middle}
 tr:last-child td{border-bottom:none}
-tbody tr:hover{background:rgba(255,255,255,.02)}
-.mono{font-family:var(--mono);font-size:12px;color:var(--purple-l)}
+tbody tr:hover{background:rgba(109,40,217,.04)}
+.mono{font-family:var(--mono);font-size:12px;color:var(--purple-ll)}
 .gold{color:var(--orange-l);font-size:12px}
 .dim{color:var(--text-dim);font-size:12px}
 .muted{color:var(--text-muted);font-size:12px;font-family:var(--mono);white-space:nowrap}
 
-/* TOAST */
-#toast{position:fixed;bottom:24px;right:24px;z-index:9999;min-width:260px;border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:10px;font-size:13px;font-weight:600;transform:translateY(80px);opacity:0;transition:all .3s cubic-bezier(.34,1.56,.64,1);pointer-events:none}
+/* CHECKBOX */
+input[type=checkbox]{
+  width:16px;height:16px;accent-color:var(--purple);cursor:pointer;
+  border-radius:4px;flex-shrink:0;
+}
+
+/* BULK BAR */
+#bulkBar{
+  display:none;align-items:center;gap:10px;flex-wrap:wrap;
+  padding:12px 16px;background:rgba(109,40,217,.1);border:1px solid rgba(109,40,217,.3);
+  border-radius:10px;margin-bottom:12px;
+}
+#bulkBar.show{display:flex}
+#bulkCount{font-size:13px;color:var(--purple-ll);font-weight:600}
+
+/* ════════════════════ TOAST ════════════════════ */
+#toast{position:fixed;bottom:24px;right:24px;z-index:99999;min-width:260px;max-width:380px;border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:10px;font-size:13px;font-weight:600;transform:translateY(80px);opacity:0;transition:all .3s cubic-bezier(.34,1.56,.64,1);pointer-events:none}
 #toast.show{transform:translateY(0);opacity:1}
 #toast.ok{background:var(--green-dim);border:1px solid var(--green);color:var(--green-l)}
 #toast.err{background:var(--red-dim);border:1px solid var(--red);color:var(--red-l)}
 #toast.warn{background:var(--orange-dim);border:1px solid var(--orange);color:var(--orange-l)}
+#toast.info{background:var(--purple-dim);border:1px solid var(--purple);color:var(--purple-ll)}
 
-/* MISC */
-.empty{text-align:center;padding:50px 20px;color:var(--text-muted);font-size:13px}
-.ico{font-size:36px;margin-bottom:10px}
-.spin{width:16px;height:16px;border-radius:50%;border:2px solid rgba(255,255,255,.2);border-top-color:#fff;animation:sp .6s linear infinite;display:inline-block}
+/* ════════════════════ MISC ════════════════════ */
+.empty{text-align:center;padding:56px 20px;color:var(--text-muted);font-size:13px}
+.ico{font-size:38px;margin-bottom:12px}
+.spin{width:16px;height:16px;border-radius:50%;border:2px solid rgba(255,255,255,.15);border-top-color:#fff;animation:sp .6s linear infinite;display:inline-block}
 @keyframes sp{to{transform:rotate(360deg)}}
-.sep{height:1px;background:var(--border);margin:12px 0 16px}
-.dot{width:8px;height:8px;border-radius:50%;display:inline-block}
-.dg{background:var(--green-l);box-shadow:0 0 6px var(--green)}
-.dr{background:var(--red-l)}
+.sep{height:1px;background:var(--border);margin:14px 0 18px}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0}
+.dg{background:var(--green-l);box-shadow:0 0 7px var(--green)}
+.dr{background:var(--red-l);box-shadow:0 0 7px var(--red)}
 .dy{background:var(--orange-l)}
 .dgray{background:var(--text-muted)}
-.info{background:rgba(124,58,237,.07);border:1px solid rgba(124,58,237,.2);border-radius:9px;padding:14px 16px;font-size:13px;color:var(--text-dim);line-height:1.8}
-.info.green{background:rgba(22,163,74,.07);border-color:rgba(22,163,74,.2)}
-.info.orange{background:rgba(217,119,6,.08);border-color:rgba(217,119,6,.3)}
-.info strong{color:var(--text)}
-.info code{font-family:var(--mono);font-size:11px;background:rgba(124,58,237,.15);padding:1px 5px;border-radius:4px;color:var(--purple-l)}
-.info a{color:var(--purple-l)}
-.steps{display:flex;flex-direction:column;gap:12px;margin-top:10px}
+.info-box{border-radius:10px;padding:14px 16px;font-size:13px;line-height:1.8}
+.info-box.purple{background:rgba(109,40,217,.08);border:1px solid rgba(109,40,217,.2);color:var(--text-dim)}
+.info-box.green{background:rgba(21,128,61,.08);border:1px solid rgba(21,128,61,.2);color:var(--text-dim)}
+.info-box.orange{background:rgba(180,83,9,.08);border:1px solid rgba(180,83,9,.25);color:var(--text-dim)}
+.info-box strong{color:var(--text)}
+.info-box code{font-family:var(--mono);font-size:11px;background:rgba(109,40,217,.15);padding:1px 6px;border-radius:4px;color:var(--purple-ll)}
+.info-box a{color:var(--purple-ll)}
+.status-badge{display:inline-flex;align-items:center;gap:7px;font-size:12px;padding:5px 12px;border-radius:7px;background:var(--bg3);border:1px solid var(--border)}
+@keyframes rowIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+tbody tr{animation:rowIn .15s ease both}
+
+/* FEEDBACK MODAL */
+.modal-overlay{position:fixed;inset:0;z-index:9990;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);display:grid;place-items:center;padding:20px}
+.modal-box{background:var(--bg2);border:1px solid var(--border);border-radius:18px;padding:28px;max-width:500px;width:100%}
+.modal-box h3{font-size:17px;font-weight:700;margin-bottom:6px}
+.modal-box p{font-size:13px;color:var(--text-dim);margin-bottom:18px;line-height:1.6}
+.modal-box .star-row{display:flex;gap:6px;margin-bottom:16px}
+.star{font-size:28px;cursor:pointer;transition:transform .1s;user-select:none}
+.star:hover,.star.active{transform:scale(1.2)}
+
+/* STEPS */
+.steps{display:flex;flex-direction:column;gap:12px}
 .step{display:flex;gap:12px;align-items:flex-start}
-.sn{width:26px;height:26px;border-radius:50%;background:var(--purple-dim);border:1px solid var(--purple);color:var(--purple-l);font-size:12px;font-weight:700;display:grid;place-items:center;flex-shrink:0}
+.sn{width:26px;height:26px;border-radius:50%;background:var(--purple-dim);border:1px solid rgba(109,40,217,.5);color:var(--purple-ll);font-size:11px;font-weight:700;display:grid;place-items:center;flex-shrink:0;margin-top:1px}
 .sb{flex:1;font-size:13px;color:var(--text-dim);line-height:1.7}
 .sb strong{color:var(--text)}
 .sb code{font-family:var(--mono);font-size:11px;background:rgba(255,255,255,.06);padding:1px 5px;border-radius:4px;color:var(--orange-l)}
-@keyframes rowIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
-tbody tr{animation:rowIn .18s ease both}
 
-/* API KEY DISPLAY */
-#apiKeyDisplay{word-break:break-all;font-family:var(--mono);font-size:11px;color:var(--text-dim)}
-
-/* STATUS BADGE */
-.status-badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:5px 12px;border-radius:7px;background:var(--bg3);border:1px solid var(--border)}
+/* GRID LAYOUT PUBLIC */
+.public-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}
+@media(max-width:600px){.public-grid{grid-template-columns:1fr}}
+.stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:18px;display:flex;flex-direction:column;gap:4px}
+.stat-num{font-size:28px;font-weight:700;font-family:var(--mono);color:var(--purple-ll)}
+.stat-label{font-size:12px;color:var(--text-dim)}
 </style>
 </head>
 <body>
-<div class="wrap">
+
+<!-- ════════════════════ ADMIN LOCK SCREEN ════════════════════ -->
+<div id="adminLock">
+  <div class="lock-box">
+    <!-- ★ เปลี่ยน src เป็น URL รูปของตัวเอง -->
+    <img class="lock-logo" src="https://cdn.discordapp.com/attachments/1211672074662449252/1492797835773739008/d820b4c5e5e29db0.png?ex=69dca3d2&is=69db5252&hm=3d5072ae5e707b7b1dac7699776b807b8216f4e8313d5fb034f4fa74308babfb&"
+         onerror="this.style.background='linear-gradient(135deg,#1a0d3b,#6d28d9)';this.removeAttribute('src')"
+         alt="logo">
+    <h2>Admin Ban Manager</h2>
+    <p>ระบบนี้สำหรับ Admin เท่านั้น<br>กรุณากรอก Password เพื่อเข้าใช้งาน</p>
+    <input type="password" id="lockInput" placeholder="Admin Password" onkeydown="if(event.key==='Enter')tryUnlock()">
+    <div class="err" id="lockErr"></div>
+    <button class="btn btn-p" style="width:100%" onclick="tryUnlock()">🔓 เข้าสู่ระบบ</button>
+  </div>
+</div>
+
+<!-- ════════════════════ MAIN APP ════════════════════ -->
+<div class="wrap" id="mainApp" style="display:none">
 
 <!-- HEADER -->
 <header>
-  <div class="logo">🛡️</div>
+  <!-- ★ เปลี่ยน src เป็น URL รูปของตัวเอง -->
+  <img class="logo-img" src="https://i.imgur.com/YOUR_LOGO.png"
+       onerror="this.style.background='linear-gradient(135deg,#1a0d3b,#6d28d9)';this.removeAttribute('src')"
+       alt="logo">
   <div>
-    <h1>Admin Ban Manager</h1>
-    <p>Roblox DataStore • Netlify Functions</p>
+    <h1 id="siteTitle">Ban Manager</h1>
+    <p id="siteSubtitle">Roblox DataStore • Admin Panel</p>
   </div>
-  <span class="badge">Netlify Edition</span>
+  <div class="header-right">
+    <!-- ★ เปลี่ยน href เป็น Discord invite link ของตัวเอง -->
+    <a class="btn-discord-join" href="https://discord.gg/YOUR_INVITE" target="_blank">
+      <svg viewBox="0 0 24 24"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057.1 18.08.112 18.103.12 18.124a19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg>
+      Join Discord
+    </a>
+    <span class="badge">v3.0</span>
+  </div>
 </header>
 
 <!-- TABS -->
-<div class="tabs">
-  <div class="tab active" onclick="goTab('setup')">⚙️ ตั้งค่า</div>
-  <div class="tab" onclick="goTab('list')">📋 รายการ Ban</div>
+<div class="tabs" id="mainTabs">
+  <div class="tab active" onclick="goTab('list')">📋 รายการ Ban</div>
   <div class="tab" onclick="goTab('ban')">🔨 Ban</div>
   <div class="tab" onclick="goTab('unban')">✅ Unban</div>
-  <div class="tab" onclick="goTab('guide')">📖 วิธีใช้</div>
+  <div class="tab" onclick="goTab('feedback')">💬 Feedback</div>
+  <div class="tab admin-only" onclick="goTab('settings')" id="settingsTab" style="display:none">⚙️ Settings</div>
 </div>
 
-<!-- ═══ SETUP ═══ -->
-<div class="tc active" id="tc-setup">
-  <div class="panel">
-    <div class="panel-title">🔑 ตั้งค่า API</div>
+<!-- ════════ TAB: BAN LIST ════════ -->
+<div class="tc active" id="tc-list">
 
-    <!-- STATUS ROW -->
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap">
-      <span class="status-badge" id="netlifyStatus"><span class="dot dgray"></span> กำลังตรวจสอบ...</span>
-      <span style="font-size:12px;color:var(--text-muted)">เชื่อมต่อผ่าน Netlify Functions อัตโนมัติ — ไม่ต้องตั้งค่าอะไรพิเศษ</span>
+  <!-- STATS -->
+  <div class="public-grid">
+    <div class="stat-card">
+      <div class="stat-num" id="statTotal">—</div>
+      <div class="stat-label">ผู้เล่นที่ถูก Ban ทั้งหมด</div>
     </div>
-
-    <div class="row">
-      <div>
-        <label>Universe ID</label>
-        <input id="universeId" placeholder="เช่น 9951170145">
-      </div>
-      <div>
-        <label>API Key (Open Cloud)</label>
-        <input type="password" id="apiKey" placeholder="รับจาก create.roblox.com/credentials">
-      </div>
-    </div>
-    <div class="row">
-      <div>
-        <label>DataStore Name</label>
-        <input id="dsName" value="AdminBans_v1">
-      </div>
-    </div>
-    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:4px">
-      <button class="btn btn-p" onclick="saveAndTest()">💾 บันทึก & ทดสอบ</button>
-      <button class="btn btn-g btn-sm" onclick="clearSettings()">🗑️ ล้างค่า</button>
+    <div class="stat-card">
+      <div class="stat-num" id="statToday">—</div>
+      <div class="stat-label">Ban วันนี้</div>
     </div>
   </div>
 
-  <div class="info green">
-    <strong>✅ เว็บนี้กดปุ่มได้เลย!</strong> — ใช้ Netlify Functions เป็น proxy กลาง เบราว์เซอร์ไม่โดน CORS แล้ว<br>
-    ไม่ต้องรัน <code>node proxy.js</code> ไม่ต้องติดตั้งอะไรเพิ่ม — ทำงานได้ทุก OS ทุกเบราว์เซอร์
-  </div>
-
-  <div class="info" style="margin-top:12px">
-    <strong>วิธีรับ API Key:</strong>
-    ไปที่ <a href="https://create.roblox.com/credentials" target="_blank">create.roblox.com/credentials</a>
-    → Create API Key → permission <code>DataStore</code> → เลือก Universe → <code>Read</code> + <code>Write</code><br>
-    <strong>Universe ID:</strong> ดูใน URL เกม <code>create.roblox.com/games/<strong>ตัวเลข</strong>/...</code>
-  </div>
-</div>
-
-<!-- ═══ LIST ═══ -->
-<div class="tc" id="tc-list">
   <div class="panel" style="padding-bottom:0">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
-      <div class="panel-title" style="margin:0">รายชื่อผู้เล่นที่ถูก Ban</div>
-      <button class="btn btn-g btn-sm" onclick="loadList()">🔄 รีเฟรช</button>
+      <div class="panel-title" style="margin:0">รายชื่อผู้เล่นที่ถูก BAN</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input id="searchBan" placeholder="🔍 ค้นหา..." style="width:180px;padding:7px 12px;font-size:12px" oninput="filterList()">
+        <button class="btn btn-g btn-sm" onclick="loadList()">🔄 รีเฟรช</button>
+      </div>
     </div>
+
+    <!-- BULK ACTION BAR -->
+    <div id="bulkBar">
+      <input type="checkbox" id="selectAll" onchange="toggleAll(this.checked)" title="เลือกทั้งหมด">
+      <span id="bulkCount">เลือก 0 รายการ</span>
+      <button class="btn btn-s btn-sm" onclick="bulkUnban()">✅ Unban ที่เลือก</button>
+      <button class="btn btn-g btn-sm" onclick="clearSelection()">✕ ยกเลิก</button>
+    </div>
+
     <div id="listWrap"><div class="empty"><div class="ico">🔍</div>กดรีเฟรชเพื่อโหลด</div></div>
   </div>
 </div>
 
-<!-- ═══ BAN ═══ -->
+<!-- ════════ TAB: BAN ════════ -->
 <div class="tc" id="tc-ban">
   <div class="panel">
     <div class="panel-title">🔨 Ban ผู้เล่น</div>
     <div class="row three">
       <div><label>UserId (ตัวเลข)</label><input id="banUid" placeholder="เช่น 12345678"></div>
-      <div><label>ชื่อผู้เล่น (สำหรับ record)</label><input id="banName" placeholder="PlayerName"></div>
+      <div><label>ชื่อผู้เล่น</label><input id="banName" placeholder="PlayerName"></div>
       <div><label>เหตุผล</label><input id="banReason" placeholder="ระบุเหตุผล..."></div>
     </div>
-    <div style="margin-top:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+    <div style="margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
       <button class="btn btn-d" id="btnBan" onclick="doBan()">🔨 Ban</button>
-      <span style="font-size:12px;color:var(--text-muted)">Ban คนออฟไลน์ได้ด้วย UserId</span>
+      <span style="font-size:12px;color:var(--text-muted)">สามารถ Ban คนออฟไลน์ได้ด้วย UserId</span>
     </div>
   </div>
 </div>
 
-<!-- ═══ UNBAN ═══ -->
+<!-- ════════ TAB: UNBAN ════════ -->
 <div class="tc" id="tc-unban">
   <div class="panel">
     <div class="panel-title">✅ Unban ผู้เล่น</div>
     <div class="row">
       <div><label>UserId (ตัวเลข)</label><input id="unbanUid" placeholder="เช่น 12345678"></div>
     </div>
-    <div style="margin-top:8px">
-      <button class="btn btn-s" id="btnUnban" onclick="doUnban()">✅ Unban</button>
-    </div>
+    <button class="btn btn-s" id="btnUnban" onclick="doUnban()">✅ Unban</button>
   </div>
 </div>
 
-<!-- ═══ GUIDE ═══ -->
-<div class="tc" id="tc-guide">
+<!-- ════════ TAB: FEEDBACK ════════ -->
+<div class="tc" id="tc-feedback">
   <div class="panel">
-    <div class="panel-title">📖 วิธีใช้งาน</div>
-    <div class="steps">
-      <div class="step"><div class="sn">1</div><div class="sb"><strong>ตั้งค่า API</strong> → ไปแท็บ ตั้งค่า → กรอก Universe ID และ API Key → กด บันทึก</div></div>
-      <div class="step"><div class="sn">2</div><div class="sb"><strong>ดู Ban List</strong> → ไปแท็บ รายการ Ban → กด รีเฟรช → เห็นรายชื่อทั้งหมด</div></div>
-      <div class="step"><div class="sn">3</div><div class="sb"><strong>Ban ผู้เล่น</strong> → ไปแท็บ Ban → กรอก UserId + ชื่อ + เหตุผล → กด Ban<br>ban คนออฟไลน์ได้เลย ไม่ต้องให้เขาออนไลน์</div></div>
-      <div class="step"><div class="sn">4</div><div class="sb"><strong>Unban ผู้เล่น</strong> → ไปแท็บ Unban → กรอก UserId → กด Unban<br>หรือกดปุ่ม ✅ Unban ในรายการ Ban โดยตรง</div></div>
-    </div>
-    <div class="sep"></div>
-    <div class="info orange" style="margin-top:0">
-      <strong>🎮 วิธีใช้ใน Roblox (In-game):</strong><br>
-      กด <code>M</code> เพื่อเปิด Admin Panel → กดปุ่ม Ban → เลือก player หรือพิมพ์ UserId ใน Unban box (สีทอง) → กด Unban
-    </div>
-  </div>
+    <div class="panel-title">💬 ส่ง Feedback</div>
+    <p style="font-size:13px;color:var(--text-dim);margin-bottom:18px;line-height:1.7">พบปัญหา หรืออยากแนะนำอะไร? แจ้งมาได้เลย — จะส่งตรงไป Discord</p>
 
-  <div class="panel">
-    <div class="panel-title">🏗️ วิธี Deploy เว็บนี้</div>
-    <div class="steps">
-      <div class="step"><div class="sn">1</div><div class="sb">สร้าง <strong>GitHub repo</strong> ใหม่ → อัปโหลดไฟล์ทั้งหมด (index.html, netlify.toml, netlify/functions/ds.js)</div></div>
-      <div class="step"><div class="sn">2</div><div class="sb">ไปที่ <a href="https://netlify.com" target="_blank" style="color:var(--purple-l)">netlify.com</a> → Add new site → Import from GitHub → เลือก repo</div></div>
-      <div class="step"><div class="sn">3</div><div class="sb">Netlify จะ deploy อัตโนมัติ ใช้เวลา ~1 นาที → ได้ URL เช่น <code>yourname.netlify.app</code></div></div>
-      <div class="step"><div class="sn">4</div><div class="sb">เปิด URL → กรอก API Key → ใช้งานได้เลย ✅ ไม่ต้องรัน proxy ใดๆ</div></div>
+    <!-- ดาว rating -->
+    <label style="margin-bottom:8px;display:block">ความพึงพอใจ</label>
+    <div class="star-row" id="starRow" style="display:flex;gap:6px;margin-bottom:16px">
+      <span class="star" onclick="setRating(1)" title="1">⭐</span>
+      <span class="star" onclick="setRating(2)" title="2">⭐</span>
+      <span class="star" onclick="setRating(3)" title="3">⭐</span>
+      <span class="star" onclick="setRating(4)" title="4">⭐</span>
+      <span class="star" onclick="setRating(5)" title="5">⭐</span>
     </div>
+
+    <div class="row">
+      <div><label>ชื่อ / Discord Tag (ไม่บังคับ)</label><input id="fbName" placeholder="เช่น WexZ#0001"></div>
+      <div><label>หมวดหมู่</label>
+        <select id="fbCat" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-family:var(--sans);font-size:13px;color:var(--text);outline:none">
+          <option value="bug">🐛 พบบั้ก</option>
+          <option value="suggest">💡 ข้อเสนอแนะ</option>
+          <option value="praise">🎉 ชมเชย</option>
+          <option value="other">📝 อื่นๆ</option>
+        </select>
+      </div>
+    </div>
+    <div class="row full">
+      <div><label>ข้อความ</label><textarea id="fbMsg" placeholder="เขียนข้อความที่นี่..." rows="4"></textarea></div>
+    </div>
+    <button class="btn btn-discord" id="btnFb" onclick="sendFeedback()">
+      <svg style="width:16px;height:16px;fill:#fff" viewBox="0 0 24 24"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057.1 18.08.112 18.103.12 18.124a19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg>
+      ส่ง Feedback ไป Discord
+    </button>
   </div>
 </div>
 
-</div><!-- wrap -->
+<!-- ════════ TAB: SETTINGS (Admin only) ════════ -->
+<div class="tc" id="tc-settings">
+  <div class="panel">
+    <div class="panel-title">🔑 ตั้งค่า API</div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+      <span class="status-badge" id="netlifyStatus"><span class="dot dgray"></span> ยังไม่ทดสอบ</span>
+    </div>
+    <div class="row">
+      <div><label>Universe ID</label><input id="universeId" placeholder="เช่น 9951170145"></div>
+      <div><label>API Key (Open Cloud)</label><input type="password" id="apiKey" placeholder="รับจาก create.roblox.com/credentials"></div>
+    </div>
+    <div class="row">
+      <div><label>DataStore Name</label><input id="dsName" value="AdminBans_v1"></div>
+      <div><label>Discord Webhook URL (สำหรับ Feedback)</label><input id="webhookUrl" placeholder="https://discord.com/api/webhooks/..."></div>
+    </div>
+    <div class="row">
+      <div><label>Admin Password (ใช้ login หน้าแรก)</label><input type="password" id="adminPwd" placeholder="ตั้ง Password ใหม่"></div>
+      <div><label>Discord Invite Link</label><input id="discordInvite" placeholder="https://discord.gg/..."></div>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px">
+      <button class="btn btn-p" onclick="saveSettings()">💾 บันทึก & ทดสอบ</button>
+      <button class="btn btn-g btn-sm" onclick="logout()">🔒 ล็อกหน้าจอ</button>
+    </div>
+  </div>
+
+  <div class="info-box purple">
+    <strong>วิธีรับ API Key:</strong>
+    ไปที่ <a href="https://create.roblox.com/credentials" target="_blank">create.roblox.com/credentials</a>
+    → Create API Key → เลือก <code>universe-datastores</code> → เลือก Universe → <code>Read</code> + <code>Write</code>
+  </div>
+</div>
+
+</div><!-- /wrap -->
+
 <div id="toast"><span id="tIco"></span><span id="tMsg"></span></div>
 
 <script>
-// ── CONFIG ───────────────────────────────────────────────
-let CFG = { universeId:'', apiKey:'', dsName:'AdminBans_v1' };
+// ════════════════════════════════════════════════════
+//  CONFIG — แก้ค่าเริ่มต้นตรงนี้
+// ════════════════════════════════════════════════════
+const DEFAULTS = {
+  // ★ ตั้ง password เริ่มต้น (ควรเปลี่ยนใน Settings หลัง deploy)
+  adminPassword: 'admin1234',
+  // ★ Discord webhook URL สำหรับรับ Feedback
+  webhookUrl: 'https://discord.com/api/webhooks/YOUR_WEBHOOK_URL',
+  // ★ Discord invite link
+  discordInvite: 'https://discord.gg/YOUR_INVITE',
+  // ★ ชื่อเว็บ
+  siteTitle: 'Ban Manager',
+};
 
-// Netlify Function endpoint — เรียก relative path เสมอ
-const API_ENDPOINT = '/.netlify/functions/ds';
+const API = '/.netlify/functions/ds';
 
-// ── TOAST ────────────────────────────────────────────────
+// ════ STATE ════
+let CFG = { universeId:'', apiKey:'', dsName:'AdminBans_v1', webhookUrl:DEFAULTS.webhookUrl, discordInvite:DEFAULTS.discordInvite };
+let isAdmin = false;
+let allEntries = [];
+let selectedUids = new Set();
+let starRating = 0;
 let toastT;
-function toast(msg, type='ok') {
-  const el=document.getElementById('toast');
-  document.getElementById('tIco').textContent = type==='ok'?'✓':type==='warn'?'⚠':'✕';
-  document.getElementById('tMsg').textContent = msg;
-  el.className='show '+type;
-  clearTimeout(toastT); toastT=setTimeout(()=>el.className='',4000);
+
+// ════════════════════════════════════════════════════
+//  LOCK SCREEN
+// ════════════════════════════════════════════════════
+function tryUnlock() {
+  const val = document.getElementById('lockInput').value;
+  const stored = localStorage.getItem('adminPwd') || DEFAULTS.adminPassword;
+  if (val === stored) {
+    document.getElementById('adminLock').style.display = 'none';
+    document.getElementById('mainApp').style.display = 'block';
+    document.getElementById('settingsTab').style.display = '';
+    isAdmin = true;
+    loadSettings();
+    loadList();
+    updateDiscordLink();
+  } else {
+    const err = document.getElementById('lockErr');
+    err.textContent = 'Password ไม่ถูกต้อง';
+    setTimeout(() => err.textContent='', 2000);
+    document.getElementById('lockInput').value = '';
+  }
 }
 
-// ── TABS ─────────────────────────────────────────────────
+function logout() {
+  document.getElementById('mainApp').style.display = 'none';
+  document.getElementById('adminLock').style.display = 'flex';
+  document.getElementById('lockInput').value = '';
+  document.getElementById('lockErr').textContent = '';
+  isAdmin = false;
+}
+
+// ════════════════════════════════════════════════════
+//  UTILS
+// ════════════════════════════════════════════════════
+let toastTimer;
+function toast(msg, type='ok') {
+  const el=document.getElementById('toast');
+  document.getElementById('tIco').textContent = type==='ok'?'✓':type==='err'?'✕':type==='info'?'ℹ':'⚠';
+  document.getElementById('tMsg').textContent = msg;
+  el.className = 'show '+type;
+  clearTimeout(toastTimer); toastTimer = setTimeout(()=>el.className='',4000);
+}
+
 function goTab(name) {
-  document.querySelectorAll('.tab').forEach((t,i)=>{
-    const ns=['setup','list','ban','unban','guide'];
-    t.classList.toggle('active',ns[i]===name);
-  });
+  const names=['list','ban','unban','feedback','settings'];
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',names[i]===name));
   document.querySelectorAll('.tc').forEach(c=>c.classList.toggle('active',c.id==='tc-'+name));
 }
 
-// ── SETTINGS ─────────────────────────────────────────────
-function saveAndTest() {
-  CFG.universeId = document.getElementById('universeId').value.trim();
-  CFG.apiKey     = document.getElementById('apiKey').value.trim();
-  CFG.dsName     = document.getElementById('dsName').value.trim() || 'AdminBans_v1';
-  if (!CFG.universeId || !CFG.apiKey) { toast('กรุณากรอก Universe ID และ API Key','err'); return; }
-  // save (ไม่เก็บ apiKey ใน localStorage เพื่อความปลอดภัย — ต้องกรอกใหม่ทุกครั้ง)
-  localStorage.setItem('bcfg', JSON.stringify({ universeId:CFG.universeId, dsName:CFG.dsName }));
-  toast('บันทึกแล้ว — กำลังทดสอบ...','warn');
-  testConnection();
+function updateDiscordLink() {
+  const link = CFG.discordInvite || DEFAULTS.discordInvite;
+  document.querySelectorAll('.btn-discord-join').forEach(a=>a.href=link);
 }
 
-function clearSettings() {
-  localStorage.removeItem('bcfg');
-  CFG = { universeId:'', apiKey:'', dsName:'AdminBans_v1' };
-  ['universeId','apiKey','dsName'].forEach(id=>{
-    const el=document.getElementById(id);
-    if(id==='dsName') el.value='AdminBans_v1'; else el.value='';
-  });
-  setNetlifyStatus('not-set');
-  toast('ล้างค่าแล้ว','warn');
+// ════════════════════════════════════════════════════
+//  SETTINGS
+// ════════════════════════════════════════════════════
+function saveSettings() {
+  CFG.universeId   = document.getElementById('universeId').value.trim();
+  CFG.apiKey       = document.getElementById('apiKey').value.trim();
+  CFG.dsName       = document.getElementById('dsName').value.trim() || 'AdminBans_v1';
+  CFG.webhookUrl   = document.getElementById('webhookUrl').value.trim();
+  CFG.discordInvite= document.getElementById('discordInvite').value.trim();
+  const pwd        = document.getElementById('adminPwd').value.trim();
+  if (pwd) localStorage.setItem('adminPwd', pwd);
+  if (!CFG.universeId || !CFG.apiKey) { toast('กรุณากรอก Universe ID และ API Key','err'); return; }
+  localStorage.setItem('bcfg', JSON.stringify({ universeId:CFG.universeId, dsName:CFG.dsName, webhookUrl:CFG.webhookUrl, discordInvite:CFG.discordInvite }));
+  toast('บันทึกแล้ว — กำลังทดสอบ...','info');
+  updateDiscordLink();
+  testConn();
 }
 
 function loadSettings() {
   try {
-    const s=JSON.parse(localStorage.getItem('bcfg')||'{}');
-    if(s.universeId){document.getElementById('universeId').value=s.universeId;CFG.universeId=s.universeId;}
-    if(s.dsName){document.getElementById('dsName').value=s.dsName;CFG.dsName=s.dsName;}
+    const s = JSON.parse(localStorage.getItem('bcfg')||'{}');
+    if(s.universeId)   { document.getElementById('universeId').value=s.universeId;     CFG.universeId=s.universeId; }
+    if(s.dsName)       { document.getElementById('dsName').value=s.dsName;             CFG.dsName=s.dsName; }
+    if(s.webhookUrl)   { document.getElementById('webhookUrl').value=s.webhookUrl;     CFG.webhookUrl=s.webhookUrl; }
+    if(s.discordInvite){ document.getElementById('discordInvite').value=s.discordInvite; CFG.discordInvite=s.discordInvite; }
   } catch(e){}
 }
 
-// ── NETLIFY STATUS ───────────────────────────────────────
-function setNetlifyStatus(s){
+function setStatus(s) {
   const el=document.getElementById('netlifyStatus');
-  const m={
-    ok:      ['dg',   'Netlify Function ทำงาน ✓'],
-    err:     ['dr',   'Function Error — ลองใหม่'],
-    loading: ['dy',   'กำลังทดสอบ...'],
-    'not-set':['dgray','ยังไม่ได้ตั้งค่า'],
-  };
-  const [d,t]=m[s]||['dgray','ไม่ทราบ'];
+  const m={ok:['dg','เชื่อมต่อแล้ว ✓'],err:['dr','เชื่อมต่อไม่ได้'],loading:['dy','กำลังทดสอบ...'],none:['dgray','ยังไม่ทดสอบ']};
+  const [d,t]=m[s]||['dgray',s];
   el.innerHTML=`<span class="dot ${d}"></span> ${t}`;
 }
 
-async function testConnection(){
-  setNetlifyStatus('loading');
-  // ทดสอบโดย list ban พร้อมกัน
+async function testConn() {
+  setStatus('loading');
   try {
-    const r=await callDS('LIST');
-    setNetlifyStatus('ok');
-    toast('เชื่อมต่อสำเร็จ ✓','ok');
-  } catch(e){
-    setNetlifyStatus('err');
-    toast('เชื่อมต่อไม่ได้: '+e.message,'err');
-  }
+    await callDS('LIST');
+    setStatus('ok'); toast('เชื่อมต่อสำเร็จ ✓','ok');
+    loadList();
+  } catch(e){ setStatus('err'); toast(e.message,'err'); }
 }
 
-// ── CALL NETLIFY FUNCTION ────────────────────────────────
+// ════════════════════════════════════════════════════
+//  API CALL
+// ════════════════════════════════════════════════════
 async function callDS(method, entryKey, body) {
-  if (!CFG.universeId || !CFG.apiKey) throw new Error('กรุณาตั้งค่า Universe ID และ API Key ก่อน');
-  const r = await fetch(API_ENDPOINT, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+  if (!CFG.universeId || !CFG.apiKey) throw new Error('กรุณาตั้งค่า Universe ID และ API Key ใน Settings ก่อน');
+  const r = await fetch(API, {
+    method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({ method, universeId:CFG.universeId, apiKey:CFG.apiKey, dsName:CFG.dsName, entryKey, body })
   });
   const text = await r.text();
-  if (!r.ok) throw new Error('HTTP '+r.status+': '+text.slice(0,80));
+  if (!r.ok) throw new Error('HTTP '+r.status+': '+text.slice(0,100));
   try { return JSON.parse(text); } catch { return {}; }
 }
 
-// ── LIST ─────────────────────────────────────────────────
-async function loadList(){
-  const wrap=document.getElementById('listWrap');
-  wrap.innerHTML='<div class="empty"><div class="spin"></div><br><br>กำลังโหลด...</div>';
-  try{
-    const ld=await callDS('LIST');
-    const keys=(ld?.keys||[]).map(k=>k.key);
-    if(!keys.length){wrap.innerHTML='<div class="empty"><div class="ico">✅</div>ไม่มีผู้เล่นที่ถูก Ban</div>';return;}
-    const entries=await Promise.all(keys.map(async k=>{
-      try{return{uid:k.replace('ban_',''),data:await callDS('GET',k)};}
-      catch{return{uid:k.replace('ban_',''),data:{}};}
+// ════════════════════════════════════════════════════
+//  BAN LIST
+// ════════════════════════════════════════════════════
+async function loadList() {
+  const wrap = document.getElementById('listWrap');
+  selectedUids.clear();
+  document.getElementById('bulkBar').classList.remove('show');
+  wrap.innerHTML = '<div class="empty"><div class="spin"></div><br><br>กำลังโหลด...</div>';
+  try {
+    const ld = await callDS('LIST');
+    const keys = (ld?.keys||[]).map(k=>k.key);
+    document.getElementById('statTotal').textContent = keys.length;
+
+    if (!keys.length) {
+      document.getElementById('statToday').textContent = '0';
+      wrap.innerHTML = '<div class="empty"><div class="ico">✅</div>ไม่มีผู้เล่นที่ถูก Ban</div>';
+      return;
+    }
+
+    const entries = await Promise.all(keys.map(async k=>{
+      try { return { uid:k.replace('ban_',''), data:await callDS('GET',k) }; }
+      catch { return { uid:k.replace('ban_',''), data:{} }; }
     }));
-    const rows=entries.map((e,i)=>{
-      const d=e.data||{};
-      const dt=d.time?new Date(d.time*1000).toLocaleString('th-TH'):'-';
-      const nm=(d.name||e.uid).replace(/'/g,"\\'");
-      return `<tr style="animation-delay:${i*.03}s">
-        <td class="mono">${e.uid}</td>
-        <td style="font-weight:600">${d.name||'-'}</td>
-        <td class="dim" style="max-width:160px">${d.reason||'-'}</td>
-        <td class="gold">${d.bannedBy||'-'}</td>
-        <td class="muted">${dt}</td>
-        <td><button class="btn btn-s btn-sm" onclick="quickUnban('${e.uid}','${nm}')">✅ Unban</button></td>
-      </tr>`;
-    }).join('');
-    wrap.innerHTML=`<div class="tbl-wrap"><table><thead><tr><th>UserId</th><th>ชื่อผู้เล่น</th><th>เหตุผล</th><th>Ban โดย</th><th>วันที่</th><th></th></tr></thead><tbody>${rows}</tbody></table></div><div style="padding:10px 14px;font-size:12px;color:var(--text-muted)">${entries.length} รายการ</div>`;
-  }catch(e){
-    const isConfig = e.message.includes('ตั้งค่า');
-    wrap.innerHTML=`<div class="empty"><div class="ico">${isConfig?'⚙️':'⚠️'}</div>${e.message}<br><br><button class="btn btn-p btn-sm" onclick="goTab('setup')">${isConfig?'ไปตั้งค่า':'ลองอีกครั้ง'}</button></div>`;
-    if(!isConfig) toast(e.message,'err');
+
+    allEntries = entries;
+    const today = Math.floor(Date.now()/1000) - 86400;
+    const todayCnt = entries.filter(e=>(e.data?.time||0)>today).length;
+    document.getElementById('statToday').textContent = todayCnt;
+
+    renderList(entries);
+    document.getElementById('bulkBar').classList.add('show');
+  } catch(e) {
+    const cfg = e.message.includes('ตั้งค่า');
+    wrap.innerHTML = `<div class="empty"><div class="ico">${cfg?'⚙️':'⚠️'}</div>${e.message}<br><br>
+      <button class="btn btn-p btn-sm" onclick="goTab('settings')">${cfg?'ไปตั้งค่า':'Settings'}</button></div>`;
+    document.getElementById('statTotal').textContent = '—';
+    document.getElementById('statToday').textContent = '—';
   }
 }
 
-// ── BAN ──────────────────────────────────────────────────
-async function doBan(){
-  const uid   =document.getElementById('banUid').value.trim().replace(/\D/g,'');
-  const name  =document.getElementById('banName').value.trim();
-  const reason=document.getElementById('banReason').value.trim();
-  if(!uid){toast('กรุณาระบุ UserId','err');return;}
-  const btn=document.getElementById('btnBan');
-  btn.disabled=true;btn.innerHTML='<span class="spin"></span> กำลัง Ban...';
-  try{
-    await callDS('POST','ban_'+uid,{
-      reason:reason||'No reason given',
-      name:name||uid,
-      bannedBy:'WebPanel',
-      time:Math.floor(Date.now()/1000)
-    });
+function renderList(entries) {
+  const wrap = document.getElementById('listWrap');
+  if (!entries.length) {
+    wrap.innerHTML = '<div class="empty"><div class="ico">🔍</div>ไม่พบรายการที่ค้นหา</div>';
+    return;
+  }
+  const rows = entries.map((e,i)=>{
+    const d = e.data||{};
+    const dt = d.time ? new Date(d.time*1000).toLocaleString('th-TH') : '-';
+    const nm = (d.name||e.uid).replace(/'/g,"\\'");
+    const checked = selectedUids.has(e.uid) ? 'checked' : '';
+    return `<tr id="row_${e.uid}" style="animation-delay:${i*.025}s">
+      <td><input type="checkbox" ${checked} onchange="toggleSelect('${e.uid}',this.checked)"></td>
+      <td class="mono">${e.uid}</td>
+      <td style="font-weight:600">${d.name||'-'}</td>
+      <td class="dim" style="max-width:160px;overflow:hidden;text-overflow:ellipsis">${d.reason||'-'}</td>
+      <td class="gold">${d.bannedBy||'-'}</td>
+      <td class="muted">${dt}</td>
+      <td><button class="btn btn-s btn-xs" onclick="quickUnban('${e.uid}','${nm}')">✅ Unban</button></td>
+    </tr>`;
+  }).join('');
+
+  wrap.innerHTML = `
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr>
+        <th style="width:36px"><input type="checkbox" id="headerCheck" onchange="toggleAll(this.checked)" title="เลือกทั้งหมด"></th>
+        <th>UserId</th><th>ชื่อผู้เล่น</th><th>เหตุผล</th><th>Ban โดย</th><th>วันที่</th><th></th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+  </div>
+  <div style="padding:10px 14px;font-size:12px;color:var(--text-muted)">${entries.length} รายการ</div>`;
+}
+
+function filterList() {
+  const q = document.getElementById('searchBan').value.toLowerCase();
+  const filtered = allEntries.filter(e=>{
+    const d = e.data||{};
+    return !q || e.uid.includes(q) || (d.name||'').toLowerCase().includes(q) || (d.reason||'').toLowerCase().includes(q);
+  });
+  renderList(filtered);
+}
+
+// ════════════════════════════════════════════════════
+//  SELECT / BULK UNBAN
+// ════════════════════════════════════════════════════
+function toggleSelect(uid, checked) {
+  if (checked) selectedUids.add(uid); else selectedUids.delete(uid);
+  updateBulkBar();
+}
+
+function toggleAll(checked) {
+  selectedUids.clear();
+  if (checked) allEntries.forEach(e=>selectedUids.add(e.uid));
+  document.querySelectorAll('tbody input[type=checkbox]').forEach(cb=>cb.checked=checked);
+  const hc = document.getElementById('headerCheck');
+  if(hc) hc.checked = checked;
+  updateBulkBar();
+}
+
+function clearSelection() {
+  selectedUids.clear();
+  document.querySelectorAll('tbody input[type=checkbox]').forEach(cb=>cb.checked=false);
+  const hc = document.getElementById('headerCheck');
+  if(hc) hc.checked = false;
+  updateBulkBar();
+}
+
+function updateBulkBar() {
+  document.getElementById('bulkCount').textContent = `เลือก ${selectedUids.size} รายการ`;
+  const hc = document.getElementById('headerCheck');
+  if(hc) hc.checked = selectedUids.size > 0 && selectedUids.size === allEntries.length;
+}
+
+async function bulkUnban() {
+  if (!selectedUids.size) { toast('ยังไม่ได้เลือกรายการ','warn'); return; }
+  const count = selectedUids.size;
+  if (!confirm(`Unban ${count} คน ยืนยัน?`)) return;
+  toast(`กำลัง Unban ${count} คน...`,'info');
+  let ok=0, fail=0;
+  const uids = [...selectedUids];
+  await Promise.all(uids.map(async uid=>{
+    try { await callDS('DELETE','ban_'+uid); ok++; } catch { fail++; }
+  }));
+  toast(`Unban สำเร็จ ${ok} คน${fail?` (ล้มเหลว ${fail})`:''}`,'ok');
+  selectedUids.clear();
+  setTimeout(loadList, 600);
+}
+
+// ════════════════════════════════════════════════════
+//  BAN / UNBAN
+// ════════════════════════════════════════════════════
+async function doBan() {
+  const uid    = document.getElementById('banUid').value.trim().replace(/\D/g,'');
+  const name   = document.getElementById('banName').value.trim();
+  const reason = document.getElementById('banReason').value.trim();
+  if (!uid) { toast('กรุณาระบุ UserId','err'); return; }
+  const btn = document.getElementById('btnBan');
+  btn.disabled=true; btn.innerHTML='<span class="spin"></span> กำลัง Ban...';
+  try {
+    await callDS('POST','ban_'+uid,{reason:reason||'No reason given',name:name||uid,bannedBy:'WebPanel',time:Math.floor(Date.now()/1000)});
     toast('Ban สำเร็จ: '+(name||uid),'ok');
     ['banUid','banName','banReason'].forEach(id=>document.getElementById(id).value='');
-  }catch(e){toast(e.message,'err');}
-  finally{btn.disabled=false;btn.innerHTML='🔨 Ban';}
+    loadList();
+  } catch(e) { toast(e.message,'err'); }
+  finally { btn.disabled=false; btn.innerHTML='🔨 Ban'; }
 }
 
-// ── UNBAN ────────────────────────────────────────────────
-async function doUnban(){
-  const uid=document.getElementById('unbanUid').value.trim().replace(/\D/g,'');
-  if(!uid){toast('กรุณาระบุ UserId','err');return;}
+async function doUnban() {
+  const uid = document.getElementById('unbanUid').value.trim().replace(/\D/g,'');
+  if (!uid) { toast('กรุณาระบุ UserId','err'); return; }
   await performUnban(uid);
 }
-async function quickUnban(uid,name){
-  if(!confirm('Unban '+name+' ('+uid+')?'))return;
-  await performUnban(uid,true);
+
+async function quickUnban(uid, name) {
+  if (!confirm('Unban '+name+' ('+uid+')?')) return;
+  await performUnban(uid, true);
 }
-async function performUnban(uid,refresh=false){
-  const btn=document.getElementById('btnUnban');
+
+async function performUnban(uid, refresh=false) {
+  const btn = document.getElementById('btnUnban');
   if(btn){btn.disabled=true;btn.innerHTML='<span class="spin"></span>';}
-  try{
+  try {
     await callDS('DELETE','ban_'+uid);
     toast('Unban สำเร็จ: '+uid,'ok');
-    if(document.getElementById('unbanUid'))document.getElementById('unbanUid').value='';
-    if(refresh)setTimeout(loadList,800);
-  }catch(e){toast(e.message,'err');}
-  finally{if(btn){btn.disabled=false;btn.innerHTML='✅ Unban';}}
+    if(document.getElementById('unbanUid')) document.getElementById('unbanUid').value='';
+    if(refresh) setTimeout(loadList,700);
+  } catch(e) { toast(e.message,'err'); }
+  finally { if(btn){btn.disabled=false;btn.innerHTML='✅ Unban';} }
 }
 
-// ── INIT ─────────────────────────────────────────────────
-loadSettings();
+// ════════════════════════════════════════════════════
+//  FEEDBACK → DISCORD WEBHOOK
+// ════════════════════════════════════════════════════
+function setRating(n) {
+  starRating = n;
+  document.querySelectorAll('.star').forEach((s,i)=>{
+    s.textContent = i < n ? '⭐' : '☆';
+    s.style.opacity = i < n ? '1' : '0.4';
+  });
+}
 
-// ตรวจสอบว่า Netlify Function ใช้งานได้ไหม
+async function sendFeedback() {
+  const name    = document.getElementById('fbName').value.trim() || 'Anonymous';
+  const cat     = document.getElementById('fbCat').value;
+  const msg     = document.getElementById('fbMsg').value.trim();
+  const webhook = CFG.webhookUrl || DEFAULTS.webhookUrl;
+
+  if (!msg) { toast('กรุณาพิมพ์ข้อความก่อน','err'); return; }
+  if (!webhook || webhook.includes('YOUR_WEBHOOK')) { toast('Admin ยังไม่ตั้งค่า Webhook URL','warn'); return; }
+
+  const catLabel = {bug:'🐛 พบบั้ก',suggest:'💡 ข้อเสนอแนะ',praise:'🎉 ชมเชย',other:'📝 อื่นๆ'}[cat]||cat;
+  const stars    = starRating ? '⭐'.repeat(starRating) + ` (${starRating}/5)` : 'ไม่ได้ให้คะแนน';
+  const color    = {bug:0xff4444,suggest:0x7c3aed,praise:0x22c55e,other:0x888888}[cat]||0x888888;
+
+  const payload = {
+    username: 'Ban Manager Feedback',
+    avatar_url: 'https://i.imgur.com/YOUR_LOGO.png',
+    embeds: [{
+      title: `${catLabel}`,
+      description: msg,
+      color,
+      fields: [
+        { name:'👤 ผู้ส่ง', value:name, inline:true },
+        { name:'⭐ คะแนน', value:stars, inline:true },
+      ],
+      footer: { text:'Ban Manager • '+new Date().toLocaleString('th-TH') }
+    }]
+  };
+
+  const btn = document.getElementById('btnFb');
+  btn.disabled=true; btn.innerHTML='<span class="spin"></span> กำลังส่ง...';
+  try {
+    const r = await fetch(webhook, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) });
+    if (r.ok || r.status===204) {
+      toast('ส่ง Feedback แล้ว ขอบคุณ! 🎉','ok');
+      document.getElementById('fbMsg').value='';
+      document.getElementById('fbName').value='';
+      setRating(0);
+    } else {
+      toast('ส่งไม่สำเร็จ: '+r.status,'err');
+    }
+  } catch(e) { toast('Error: '+e.message,'err'); }
+  finally { btn.disabled=false; btn.innerHTML='<svg style="width:16px;height:16px;fill:#fff" viewBox="0 0 24 24"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057.1 18.08.112 18.103.12 18.124a19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg> ส่ง Feedback ไป Discord'; }
+}
+
+// ════════════════════════════════════════════════════
+//  INIT
+// ════════════════════════════════════════════════════
+// ตรวจสอบ Netlify Function
 (async()=>{
-  try{
-    const r=await fetch(API_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method:'PING'})});
-    // function ตอบกลับ = ทำงานอยู่
-    setNetlifyStatus(r.status===400?'ok':'ok'); // 400 = function รัน แต่ params ผิด = function ok
-  }catch(e){
-    setNetlifyStatus('err');
-  }
+  try {
+    await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:'{"method":"PING"}'});
+  } catch(e){}
 })();
+
+// กด Enter ที่ lock screen
+document.getElementById('lockInput').addEventListener('keydown',e=>{ if(e.key==='Enter') tryUnlock(); });
 </script>
 </body>
 </html>
