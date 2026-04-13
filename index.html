@@ -598,7 +598,7 @@ function renderList(entries) {
       <td class="mono copy-btn" onclick="copyId('${e.uid}')" title="คลิกเพื่อคัดลอก ID">${e.uid} 📋</td>
       <td style="font-weight:700; color:var(--text);">${d.name||'-'}</td>
       <td class="dim" style="max-width:180px;overflow:hidden;text-overflow:ellipsis" title="${d.reason||'-'}">${d.reason||'-'}</td>
-      <td class="gold">${d.bannedBy||'-'}</td>
+      <td class="gold" title="Admin ที่ Ban">${d.bannedBy||'Unknown'}</td>
       <td class="muted">${dt}</td>
       <td><button class="btn btn-s btn-xs" onclick="quickUnban('${e.uid}','${nm}')">✅ ปลดแบน</button></td>
     </tr>`;
@@ -710,8 +710,28 @@ async function bulkUnban() {
     try { await callDS('DELETE','ban_'+uid); ok++; } catch { fail++; }
   }));
   toast(`ปลดแบนสำเร็จ ${ok} คน${fail?` (ล้มเหลว ${fail})`:''}`,'ok');
+  // ── ลบ rows ที่ unban สำเร็จออกจาก DOM ทันที ──
+  uids.forEach(uid => {
+    const row = document.getElementById('row_'+uid);
+    if (row) {
+      row.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
+      row.style.opacity = '0';
+      row.style.transform = 'translateX(20px)';
+      setTimeout(() => { row.remove(); }, 270);
+    }
+  });
+  allEntries = allEntries.filter(e => !uids.includes(e.uid));
   selectedUids.clear();
-  setTimeout(loadList, 600);
+  const statEl = document.getElementById('statTotal');
+  if (statEl) statEl.textContent = allEntries.length;
+  if (allEntries.length === 0) {
+    setTimeout(() => {
+      document.getElementById('listWrap').innerHTML = '<div class="empty"><div class="ico">✅</div>ไม่พบผู้เล่นที่ถูก Ban ในระบบ</div>';
+      document.getElementById('bulkBar').classList.remove('show');
+    }, 350);
+  }
+  const countEl = document.querySelector('#listWrap [style*="text-align:right"]');
+  if (countEl) setTimeout(() => countEl.textContent = 'ทั้งหมด '+allEntries.length+' รายการ', 350);
 }
 
 // ════════════════════════════════════════════════════
@@ -740,18 +760,41 @@ async function doUnban() {
 }
 
 async function quickUnban(uid, name) {
-  if (!confirm('ยืนยันการปลดแบนผู้เล่น '+name+' (ID: '+uid+') ?')) return;
-  await performUnban(uid, true);
+  if (!confirm('ยืนยันการปลดแบน '+name+' (ID: '+uid+') ?')) return;
+  await performUnban(uid);
 }
 
-async function performUnban(uid, refresh=false) {
+async function performUnban(uid) {
   const btn = document.getElementById('btnUnban');
   if(btn){btn.disabled=true;btn.innerHTML='<span class="spin"></span>';}
   try {
     await callDS('DELETE','ban_'+uid);
-    toast('ปลดแบนบัญชีสำเร็จ: '+uid,'ok');
+    toast('ปลดแบนสำเร็จ: '+uid,'ok');
     if(document.getElementById('unbanUid')) document.getElementById('unbanUid').value='';
-    if(refresh) setTimeout(loadList,700);
+
+    // ── ลบ row ออกจาก DOM ทันที พร้อม fade animation ──
+    const row = document.getElementById('row_'+uid);
+    if (row) {
+      row.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+      row.style.opacity = '0';
+      row.style.transform = 'translateX(20px)';
+      setTimeout(() => {
+        row.remove();
+        // อัปเดต allEntries และ stats
+        allEntries = allEntries.filter(e => e.uid !== uid);
+        selectedUids.delete(uid);
+        const statEl = document.getElementById('statTotal');
+        if (statEl) statEl.textContent = allEntries.length;
+        // ถ้าไม่มีรายการเหลือ
+        if (allEntries.length === 0) {
+          document.getElementById('listWrap').innerHTML = '<div class="empty"><div class="ico">✅</div>ไม่พบผู้เล่นที่ถูก Ban ในระบบ</div>';
+          document.getElementById('bulkBar').classList.remove('show');
+        }
+        // อัปเดต count row
+        const countEl = document.querySelector('#listWrap [style*="text-align:right"]');
+        if (countEl) countEl.textContent = 'ทั้งหมด '+allEntries.length+' รายการ';
+      }, 320);
+    }
   } catch(e) { toast(e.message,'err'); }
   finally { if(btn){btn.disabled=false;btn.innerHTML='✅ ปลดแบนผู้เล่น';} }
 }
